@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Register - AI-Powered Cyber Threat Detection{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-dark cyber-navbar px-3 px-md-4">
+    <a class="navbar-brand d-flex align-items-center" href="/">
+        <span class="brand-icon-wrap me-2">
+            <i class="bi bi-shield-lock-fill"></i>
+        </span>
+        <span class="fw-bold brand-text">AI-Powered Cyber Threat Detection</span>
+    </a>
+    <div class="d-flex align-items-center gap-3">
+        <a href="{{ url_for('login') }}" class="nav-link-custom">
+            <i class="bi bi-box-arrow-in-right me-1"></i>Login
+        </a>
+        <a href="{{ url_for('register') }}" class="nav-link-custom active">
+            <i class="bi bi-person-plus-fill me-1"></i>Register
+        </a>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page register-page">
+    <!-- Animated background grid -->
+    <div class="cyber-grid-bg"></div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="container-fluid px-4 mt-3" style="position:relative;z-index:2;">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show flash-alert" role="alert">
+            <i class="bi bi-{% if category == 'success' %}check-circle-fill{% elif category == 'danger' %}exclamation-triangle-fill{% else %}info-circle-fill{% endif %} me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="d-flex flex-column align-items-center justify-content-center flex-grow-1 py-4" style="position:relative;z-index:2;">
+        <!-- Register Card -->
+        <div class="auth-card register-card">
+            <div class="auth-card-header">
+                <div class="header-icon-ring">
+                    <i class="bi bi-person-plus-fill"></i>
+                </div>
+                <span>Register New Account</span>
+            </div>
+            <div class="auth-card-body">
+                <form method="POST" action="{{ url_for('register') }}" id="registerForm">
+                    <!-- Username -->
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <div class="input-group cyber-input-group">
+                            <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+                            <input type="text" class="form-control" name="username" placeholder="Choose a username" required minlength="4">
+                        </div>
+                        <small class="form-text helper-text">Username must be at least 4 characters long</small>
+                    </div>
+
+                    <!-- First & Last Name -->
+                    <div class="row mb-3 g-3">
+                        <div class="col-6">
+                            <label class="form-label">First Name</label>
+                            <input type="text" class="form-control" name="first_name" placeholder="First name" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Last Name</label>
+                            <input type="text" class="form-control" name="last_name" placeholder="Last name" required>
+                        </div>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label class="form-label">Email Address</label>
+                        <div class="input-group cyber-input-group">
+                            <span class="input-group-text"><i class="bi bi-envelope-fill"></i></span>
+                            <input type="email" class="form-control" name="email" placeholder="Enter your email" required>
+                        </div>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <div class="input-group cyber-input-group">
+                            <span class="input-group-text"><i class="bi bi-key-fill"></i></span>
+                            <input type="password" class="form-control" name="password" placeholder="Create a password" required minlength="8">
+                        </div>
+                        <small class="form-text helper-text">Password must be at least 8 characters long</small>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="mb-4">
+                        <label class="form-label">Confirm Password</label>
+                        <div class="input-group cyber-input-group">
+                            <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                            <input type="password" class="form-control" name="confirm_password" placeholder="Confirm your password" required>
+                        </div>
+                    </div>
+
+                    <!-- Register Button -->
+                    <button type="submit" class="btn btn-purple w-100 mb-3">
+                        <i class="bi bi-person-plus-fill me-1"></i>Register
+                    </button>
+
+                    <p class="text-center mb-0 auth-footer-text">
+                        Already have an account? <a href="{{ url_for('login') }}" class="text-purple fw-semibold">Login here</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

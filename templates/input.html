@@ -1,0 +1,423 @@
+{% extends "base.html" %}
+
+{% block title %}Enter Input - AI-Powered Cyber Threat Detection{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-dark cyber-navbar px-3 px-md-4">
+    <a class="navbar-brand d-flex align-items-center" href="/">
+        <span class="brand-icon-wrap me-2">
+            <i class="bi bi-shield-lock-fill"></i>
+        </span>
+        <span class="fw-bold brand-text">AI-Powered Cyber Threat Detection</span>
+    </a>
+    <div class="d-flex align-items-center gap-2">
+        <div class="user-profile-badge">
+            <i class="bi bi-person-circle me-1"></i>{{ username }}
+        </div>
+        <a href="{{ url_for('dashboard') }}" class="nav-link-custom">
+            <i class="bi bi-speedometer2 me-1"></i>Dashboard
+        </a>
+        <a href="{{ url_for('logout') }}" class="btn btn-logout-nav">
+            <i class="bi bi-box-arrow-right me-1"></i>Logout
+        </a>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <!-- Animated background grid -->
+    <div class="cyber-grid-bg"></div>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="container-fluid px-4 mt-3" style="position:relative;z-index:2;">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show flash-alert" role="alert">
+            <i class="bi bi-{% if category == 'success' %}check-circle-fill{% elif category == 'danger' %}exclamation-triangle-fill{% else %}info-circle-fill{% endif %} me-2"></i>
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="d-flex flex-column align-items-center flex-grow-1 py-4" style="position:relative;z-index:2;">
+        <!-- Input Card -->
+        <div class="auth-card input-card">
+            <div class="auth-card-header">
+                <div class="header-icon-ring">
+                    <i class="bi bi-hdd-network-fill"></i>
+                </div>
+                <span>Enter Input</span>
+            </div>
+            <div class="auth-card-body">
+                <!-- Input Description -->
+                <p class="input-description">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Enter network traffic data below or click <strong>Try Sample</strong> to load a live packet from the dataset.
+                </p>
+
+                <!-- Source IP & Destination IP -->
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="form-label">Source IP Address</label>
+                        <div class="input-group cyber-input-group">
+                            <span class="input-group-text"><i class="bi bi-pc-display"></i></span>
+                            <input type="text" class="form-control" id="srcIp" placeholder="192.168.1.100">
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Destination IP Address</label>
+                        <div class="input-group cyber-input-group">
+                            <span class="input-group-text"><i class="bi bi-server"></i></span>
+                            <input type="text" class="form-control" id="dstIp" placeholder="10.0.0.1">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Source Port & Destination Port -->
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="form-label">Source Port</label>
+                        <div class="input-group cyber-input-group">
+                            <span class="input-group-text"><i class="bi bi-door-open"></i></span>
+                            <input type="number" class="form-control" id="srcPort" placeholder="49152" min="0" max="65535">
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Destination Port</label>
+                        <div class="input-group cyber-input-group">
+                            <span class="input-group-text"><i class="bi bi-door-closed"></i></span>
+                            <input type="number" class="form-control" id="dstPort" placeholder="443" min="0" max="65535">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Protocol & Packet Size -->
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="form-label">Protocol</label>
+                        <div class="input-group cyber-input-group">
+                            <span class="input-group-text"><i class="bi bi-diagram-3-fill"></i></span>
+                            <select class="form-control form-select" id="protocol">
+                                <option value="6" selected>TCP (6)</option>
+                                <option value="17">UDP (17)</option>
+                                <option value="1">ICMP (1)</option>
+                                <option value="0">Other (0)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Packet Size (bytes)</label>
+                        <div class="input-group cyber-input-group">
+                            <span class="input-group-text"><i class="bi bi-box-fill"></i></span>
+                            <input type="number" class="form-control" id="packetSize" placeholder="1500" min="0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flow Duration & Timestamp -->
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="form-label">Flow Duration (<span class="text-muted">&micro;s</span>)</label>
+                        <div class="input-group cyber-input-group">
+                            <span class="input-group-text"><i class="bi bi-hourglass-split"></i></span>
+                            <input type="number" class="form-control" id="flowDuration" placeholder="120000000" min="0">
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Timestamp</label>
+                        <div class="input-group cyber-input-group">
+                            <span class="input-group-text"><i class="bi bi-clock-fill"></i></span>
+                            <input type="text" class="form-control" id="timestamp" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flags -->
+                <div class="mb-3">
+                    <label class="form-label">Flags</label>
+                    <div class="flags-container">
+                        <label class="flag-check">
+                            <input type="checkbox" id="flagSYN" value="1">
+                            <span class="flag-label">SYN</span>
+                        </label>
+                        <label class="flag-check">
+                            <input type="checkbox" id="flagACK" value="1">
+                            <span class="flag-label">ACK</span>
+                        </label>
+                        <label class="flag-check">
+                            <input type="checkbox" id="flagFIN" value="1">
+                            <span class="flag-label">FIN</span>
+                        </label>
+                        <label class="flag-check">
+                            <input type="checkbox" id="flagRST" value="1">
+                            <span class="flag-label">RST</span>
+                        </label>
+                        <label class="flag-check">
+                            <input type="checkbox" id="flagPSH" value="1">
+                            <span class="flag-label">PSH</span>
+                        </label>
+                        <label class="flag-check">
+                            <input type="checkbox" id="flagURG" value="1">
+                            <span class="flag-label">URG</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex gap-2 mb-3">
+                    <button type="button" class="btn btn-purple flex-grow-1" id="analyzeBtn">
+                        <i class="bi bi-shield-check me-1"></i>Analyze Traffic
+                    </button>
+                    <button type="button" class="btn btn-outline-sample" id="sampleBtn">
+                        <i class="bi bi-shuffle me-1"></i>Try Sample
+                    </button>
+                </div>
+
+                <!-- Output Section -->
+                <div id="outputSection" class="input-output-section" style="display:none;">
+                    <div class="output-divider">
+                        <span class="output-divider-text"><i class="bi bi-arrow-down-circle-fill me-1"></i>Analysis Output</span>
+                    </div>
+                    <div id="outputBox"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tagline -->
+        <div class="text-center mt-4">
+            <h5 class="fw-bold">AI-Powered Cyber Defense Platform</h5>
+            <p class="text-muted">Utilizing machine learning and deep learning to protect against<br>evolving cyber threats</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Auto-fill timestamp
+    function updateTimestamp() {
+        const now = new Date();
+        const pad = n => String(n).padStart(2, '0');
+        document.getElementById('timestamp').value =
+            `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    }
+    updateTimestamp();
+
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const sampleBtn = document.getElementById('sampleBtn');
+    const outputSection = document.getElementById('outputSection');
+    const outputBox = document.getElementById('outputBox');
+
+    function setLoading(btn, loading, originalHTML) {
+        btn.disabled = loading;
+        btn.innerHTML = loading
+            ? '<span class="spinner-border spinner-border-sm me-1"></span>Analyzing...'
+            : originalHTML;
+    }
+
+    function renderError(msg) {
+        outputSection.style.display = 'block';
+        outputBox.innerHTML = `
+            <div class="output-result output-error">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>${msg}
+            </div>`;
+    }
+
+    function severityClass(sev) {
+        return { Critical:'critical', High:'high', Medium:'medium', Low:'low', Info:'info' }[sev] || 'info';
+    }
+
+    function severityIcon(sev) {
+        return {
+            Critical:'bi-radioactive', High:'bi-exclamation-triangle-fill',
+            Medium:'bi-exclamation-circle-fill', Low:'bi-info-circle-fill', Info:'bi-check-circle-fill'
+        }[sev] || 'bi-question-circle';
+    }
+
+    function renderResult(data) {
+        outputSection.style.display = 'block';
+        const isAttack = data.classification === 'Attack';
+        const cls = isAttack ? 'attack' : 'normal';
+        const sevCls = severityClass(data.severity);
+
+        let html = '';
+
+        /* ── 1. Normal / Attack ── */
+        html += `
+        <div class="result-section">
+            <div class="result-section-num">1</div>
+            <div class="result-section-content">
+                <div class="result-section-label">Normal / Attack</div>
+                <div class="result-verdict result-verdict-${cls}">
+                    <div class="result-verdict-icon">
+                        <i class="bi ${isAttack ? 'bi-shield-fill-x' : 'bi-shield-fill-check'}"></i>
+                    </div>
+                    <div class="result-verdict-text">
+                        <span class="result-verdict-value">${isAttack ? 'ATTACK DETECTED' : 'NORMAL TRAFFIC'}</span>
+                        <span class="result-verdict-conf">Confidence: ${data.confidence}%</span>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+
+        /* ── 2. Attack Type ── */
+        html += `
+        <div class="result-section">
+            <div class="result-section-num">2</div>
+            <div class="result-section-content">
+                <div class="result-section-label">Attack Type</div>`;
+
+        if (isAttack) {
+            html += `
+                <div class="result-attack-type">
+                    <div class="result-attack-type-icon">
+                        <i class="bi ${data.attack_icon}"></i>
+                    </div>
+                    <div class="result-attack-type-info">
+                        <div class="result-attack-type-name">${data.attack_type}</div>
+                        <span class="severity-badge severity-${sevCls}">
+                            <i class="bi ${severityIcon(data.severity)} me-1"></i>${data.severity}
+                        </span>
+                    </div>
+                </div>`;
+        } else {
+            html += `
+                <div class="result-attack-type result-no-threat">
+                    <div class="result-attack-type-icon">
+                        <i class="bi bi-check-circle-fill"></i>
+                    </div>
+                    <div class="result-attack-type-info">
+                        <div class="result-attack-type-name">None &mdash; Benign</div>
+                        <span class="severity-badge severity-info">
+                            <i class="bi bi-check-circle-fill me-1"></i>Safe
+                        </span>
+                    </div>
+                </div>`;
+        }
+
+        html += `
+            </div>
+        </div>`;
+
+        /* ── 3. Alert & Report ── */
+        html += `
+        <div class="result-section">
+            <div class="result-section-num">3</div>
+            <div class="result-section-content">
+                <div class="result-section-label">Alert &amp; Report</div>
+                <div class="result-report result-report-${sevCls}">
+                    <div class="result-report-body">${data.alert}</div>
+                    <div class="result-report-meta">
+                        <span><i class="bi bi-geo-alt-fill me-1"></i>Source: ${data.source_ip}</span>
+                        <span><i class="bi bi-clock me-1"></i>${data.timestamp}</span>
+                    </div>
+                </div>
+            </div>
+        </div>`;
+
+        /* ── Ground truth (sample only) ── */
+        if (data.true_label) {
+            const match = data.correct ? 'match' : 'mismatch';
+            html += `
+        <div class="result-ground-truth result-gt-${match}">
+            <i class="bi ${data.correct ? 'bi-check-circle-fill' : 'bi-x-circle-fill'} me-1"></i>
+            Ground Truth: <strong>${data.true_label}</strong>
+            ${data.correct ? '&mdash; Correct prediction' : '&mdash; Mismatch'}
+        </div>`;
+        }
+
+        outputBox.innerHTML = html;
+    }
+
+    function getFormData() {
+        return {
+            src_ip: document.getElementById('srcIp').value.trim(),
+            dst_ip: document.getElementById('dstIp').value.trim(),
+            src_port: parseInt(document.getElementById('srcPort').value) || 0,
+            dst_port: parseInt(document.getElementById('dstPort').value) || 0,
+            protocol: parseInt(document.getElementById('protocol').value) || 6,
+            packet_size: parseFloat(document.getElementById('packetSize').value) || 0,
+            flow_duration: parseFloat(document.getElementById('flowDuration').value) || 0,
+            timestamp: document.getElementById('timestamp').value,
+            flag_syn: document.getElementById('flagSYN').checked ? 1 : 0,
+            flag_ack: document.getElementById('flagACK').checked ? 1 : 0,
+            flag_fin: document.getElementById('flagFIN').checked ? 1 : 0,
+            flag_rst: document.getElementById('flagRST').checked ? 1 : 0,
+            flag_psh: document.getElementById('flagPSH').checked ? 1 : 0,
+            flag_urg: document.getElementById('flagURG').checked ? 1 : 0,
+        };
+    }
+
+    function fillFormFromSample(data) {
+        if (!data.sample_fields) return;
+        const f = data.sample_fields;
+        document.getElementById('srcIp').value = f.src_ip || '';
+        document.getElementById('dstIp').value = f.dst_ip || '';
+        document.getElementById('srcPort').value = f.src_port || '';
+        document.getElementById('dstPort').value = f.dst_port || '';
+        document.getElementById('protocol').value = f.protocol || '6';
+        document.getElementById('packetSize').value = f.packet_size || '';
+        document.getElementById('flowDuration').value = f.flow_duration || '';
+        document.getElementById('flagSYN').checked = f.flag_syn > 0;
+        document.getElementById('flagACK').checked = f.flag_ack > 0;
+        document.getElementById('flagFIN').checked = f.flag_fin > 0;
+        document.getElementById('flagRST').checked = f.flag_rst > 0;
+        document.getElementById('flagPSH').checked = f.flag_psh > 0;
+        document.getElementById('flagURG').checked = f.flag_urg > 0;
+        updateTimestamp();
+    }
+
+    // Analyze button
+    analyzeBtn.addEventListener('click', function () {
+        const btnHTML = analyzeBtn.innerHTML;
+        setLoading(analyzeBtn, true);
+        updateTimestamp();
+
+        fetch('/process-input', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fields: getFormData() })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) renderError(data.error);
+            else renderResult(data);
+            setLoading(analyzeBtn, false, btnHTML);
+        })
+        .catch(() => {
+            renderError('Something went wrong. Please try again.');
+            setLoading(analyzeBtn, false, btnHTML);
+        });
+    });
+
+    // Try Sample button
+    sampleBtn.addEventListener('click', function () {
+        const btnHTML = sampleBtn.innerHTML;
+        setLoading(sampleBtn, true);
+
+        fetch('/process-input', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sample: true })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) renderError(data.error);
+            else {
+                fillFormFromSample(data);
+                renderResult(data);
+            }
+            setLoading(sampleBtn, false, btnHTML);
+        })
+        .catch(() => {
+            renderError('Could not load sample. Please try again.');
+            setLoading(sampleBtn, false, btnHTML);
+        });
+    });
+</script>
+{% endblock %}

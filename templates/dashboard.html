@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - AI-Powered Cyber Threat Detection{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block navbar %}
+<nav class="navbar navbar-dark cyber-navbar px-3 px-md-4">
+    <div class="d-flex align-items-center">
+        <a class="navbar-brand d-flex align-items-center me-4" href="/">
+            <span class="brand-icon-wrap me-2">
+                <i class="bi bi-shield-lock-fill"></i>
+            </span>
+            <span class="fw-bold brand-text">AI-Powered Cyber Threat Detection</span>
+        </a>
+        <div class="d-flex gap-1 nav-tabs-custom">
+            <a href="{{ url_for('dashboard') }}" class="nav-tab active">
+                <i class="bi bi-speedometer2 me-1"></i>Dashboard
+            </a>
+            <a href="{{ url_for('threats') }}" class="nav-tab">
+                <i class="bi bi-bug-fill me-1"></i>Threats
+            </a>
+            <a href="{{ url_for('logs') }}" class="nav-tab">
+                <i class="bi bi-journal-text me-1"></i>Logs
+            </a>
+        </div>
+    </div>
+    <div class="d-flex align-items-center gap-2">
+        <div class="user-profile-badge">
+            <i class="bi bi-person-circle me-1"></i>{{ username }}
+        </div>
+        <a href="{{ url_for('logout') }}" class="btn btn-logout-nav">
+            <i class="bi bi-box-arrow-right me-1"></i>Logout
+        </a>
+    </div>
+</nav>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="dashboard-sidebar">
+        <a href="{{ url_for('dashboard') }}" class="sidebar-item active">
+            <i class="bi bi-speedometer2 me-2"></i>Dashboard
+        </a>
+        <a href="{{ url_for('threats') }}" class="sidebar-item">
+            <i class="bi bi-shield-exclamation me-2"></i>Threat Management
+        </a>
+        <a href="{{ url_for('logs') }}" class="sidebar-item">
+            <i class="bi bi-file-earmark-lock2 me-2"></i>Security Logs
+        </a>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="dashboard-main">
+        <h2 class="page-title mb-4">
+            <i class="bi bi-speedometer2 me-2"></i>Security Dashboard
+        </h2>
+
+        <!-- Model Status Banner -->
+        {% if model_loaded %}
+        <div class="model-status-banner mb-4">
+            <div class="d-flex align-items-center gap-3">
+                <div class="model-status-icon">
+                    <i class="bi bi-cpu-fill"></i>
+                </div>
+                <div>
+                    <div class="fw-bold" style="color: #a29bfe;">Random Forest Model — Active</div>
+                    <div class="text-muted small">
+                        Accuracy: {{ "%.2f"|format(metrics.accuracy * 100) }}% |
+                        Precision: {{ "%.2f"|format(metrics.precision * 100) }}% |
+                        Recall: {{ "%.2f"|format(metrics.recall * 100) }}% |
+                        F1: {{ "%.2f"|format(metrics.f1 * 100) }}%
+                    </div>
+                </div>
+                <div class="ms-auto">
+                    <span class="scan-pulse-badge">
+                        <span class="scan-pulse-dot"></span>
+                        Model Ready
+                    </span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Stat Cards -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="stat-card stat-critical">
+                    <div class="stat-border"></div>
+                    <div class="stat-content">
+                        <div class="stat-label">Critical Threats</div>
+                        <div class="stat-number">{{ critical_count }}</div>
+                        <a href="{{ url_for('threats') }}" class="btn btn-outline-stat btn-outline-critical btn-sm">View All</a>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card stat-active">
+                    <div class="stat-border"></div>
+                    <div class="stat-content">
+                        <div class="stat-label">Active Threats</div>
+                        <div class="stat-number">{{ active_threats }}</div>
+                        <a href="{{ url_for('threats') }}" class="btn btn-outline-stat btn-outline-active btn-sm">View All</a>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="bi bi-shield-fill-exclamation text-danger"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card stat-total">
+                    <div class="stat-border"></div>
+                    <div class="stat-content">
+                        <div class="stat-label">Total Predictions</div>
+                        <div class="stat-number">{{ total_predictions }}</div>
+                        <a href="{{ url_for('logs') }}" class="btn btn-outline-stat btn-outline-total btn-sm">View Logs</a>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="bi bi-cpu text-info"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card stat-model">
+                    <div class="stat-border"></div>
+                    <div class="stat-content">
+                        <div class="stat-label">Model Accuracy</div>
+                        <div class="stat-number">{{ "%.1f"|format(metrics.accuracy * 100) }}%</div>
+                        <span class="badge bg-success bg-opacity-25 text-success">CICIDS2017</span>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="bi bi-graph-up text-success"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Run Sample Prediction -->
+        {% if model_loaded %}
+        <div class="row g-4 mb-4">
+            <div class="col-12">
+                <div class="chart-card">
+                    <h5 class="chart-title d-flex align-items-center justify-content-between">
+                        <span><i class="bi bi-lightning-charge-fill me-2"></i>Live Threat Prediction</span>
+                        <button class="btn btn-sm btn-predict" id="runPrediction" onclick="runSamplePrediction()">
+                            <i class="bi bi-play-fill me-1"></i>Analyze Random Sample
+                        </button>
+                    </h5>
+                    <div id="predictionResult" class="prediction-result-area">
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-cpu" style="font-size: 2rem;"></i>
+                            <p class="mt-2 mb-0">Click "Analyze Random Sample" to run the AI model on a random network flow from the CICIDS2017 dataset</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Charts Row -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="chart-card">
+                    <h5 class="chart-title">
+                        <i class="bi bi-bar-chart-fill me-2"></i>Model Performance Metrics
+                    </h5>
+                    <div class="chart-container">
+                        <canvas id="metricsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-card">
+                    <h5 class="chart-title">
+                        <i class="bi bi-diagram-3-fill me-2"></i>Top Feature Importance
+                    </h5>
+                    <div class="chart-container">
+                        <canvas id="featureChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detectable Classes -->
+        <div class="row g-4">
+            <div class="col-12">
+                <div class="chart-card">
+                    <h5 class="chart-title">
+                        <i class="bi bi-shield-fill-check me-2"></i>Detectable Attack Classes ({{ classes|length }})
+                    </h5>
+                    <div class="d-flex flex-wrap gap-2 mt-3">
+                        {% for cls in classes %}
+                        <span class="attack-class-badge {% if cls == 'Benign' %}badge-benign{% elif 'DoS' in cls or 'DDoS' in cls %}badge-dos{% elif 'Web' in cls %}badge-web{% elif 'Patator' in cls %}badge-brute{% else %}badge-other{% endif %}">
+                            {{ cls }}
+                        </span>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Model Performance Bar Chart
+    const metricsCtx = document.getElementById('metricsChart').getContext('2d');
+    new Chart(metricsCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Accuracy', 'Precision', 'Recall', 'F1-Score'],
+            datasets: [{
+                label: 'Score (%)',
+                data: [
+                    {{ "%.2f"|format(metrics.accuracy * 100) }},
+                    {{ "%.2f"|format(metrics.precision * 100) }},
+                    {{ "%.2f"|format(metrics.recall * 100) }},
+                    {{ "%.2f"|format(metrics.f1 * 100) }}
+                ],
+                backgroundColor: [
+                    'rgba(108, 92, 231, 0.8)',
+                    'rgba(0, 206, 209, 0.8)',
+                    'rgba(46, 204, 113, 0.8)',
+                    'rgba(243, 156, 18, 0.8)'
+                ],
+                borderColor: [
+                    '#6c5ce7',
+                    '#00ced1',
+                    '#2ecc71',
+                    '#f39c12'
+                ],
+                borderWidth: 1,
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100,
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    ticks: { color: '#aaa', callback: v => v + '%' }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { color: '#ccc', font: { size: 13 } }
+                }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => ctx.parsed.y.toFixed(2) + '%'
+                    }
+                }
+            }
+        }
+    });
+
+    // Feature Importance Chart
+    const featureCtx = document.getElementById('featureChart').getContext('2d');
+    new Chart(featureCtx, {
+        type: 'bar',
+        data: {
+            labels: [{% for name, imp in top_features %}'{{ name }}'{% if not loop.last %},{% endif %}{% endfor %}],
+            datasets: [{
+                label: 'Importance',
+                data: [{% for name, imp in top_features %}{{ "%.4f"|format(imp) }}{% if not loop.last %},{% endif %}{% endfor %}],
+                backgroundColor: 'rgba(162, 155, 254, 0.7)',
+                borderColor: '#a29bfe',
+                borderWidth: 1,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: {
+                    grid: { color: 'rgba(255,255,255,0.05)' },
+                    ticks: { color: '#aaa' }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { color: '#ccc', font: { size: 11 } }
+                }
+            },
+            plugins: {
+                legend: { display: false }
+            }
+        }
+    });
+
+    // Run sample prediction
+    function runSamplePrediction() {
+        const btn = document.getElementById('runPrediction');
+        const area = document.getElementById('predictionResult');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>Analyzing...';
+        area.innerHTML = '<div class="text-center py-4"><div class="spinner-border text-purple" role="status"></div><p class="mt-2 text-muted">Running AI model on random network sample...</p></div>';
+
+        fetch('/predict-sample', { method: 'POST' })
+            .then(r => r.json())
+            .then(data => {
+                const isCorrect = data.correct;
+                const sevClass = data.severity === 'Critical' ? 'severity-critical' :
+                                 data.severity === 'High' ? 'severity-high' :
+                                 data.severity === 'Medium' ? 'severity-medium' : 'severity-low';
+                area.innerHTML = `
+                    <div class="prediction-card ${sevClass}-bg">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <div class="pred-label">Predicted</div>
+                                <div class="pred-value fw-bold">${data.prediction}</div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="pred-label">Confidence</div>
+                                <div class="pred-value">${data.confidence}%</div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="pred-label">Severity</div>
+                                <span class="severity-badge ${sevClass}">${data.severity}</span>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="pred-label">True Label</div>
+                                <div class="pred-value">${data.true_label}</div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="pred-label">Result</div>
+                                <span class="badge ${isCorrect ? 'bg-success' : 'bg-danger'}">${isCorrect ? 'CORRECT' : 'MISMATCH'}</span>
+                            </div>
+                            <div class="col-md-1">
+                                <div class="pred-label">Source</div>
+                                <code class="source-ip">${data.source_ip}</code>
+                            </div>
+                        </div>
+                    </div>`;
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-play-fill me-1"></i>Analyze Another Sample';
+            })
+            .catch(err => {
+                area.innerHTML = '<div class="text-danger py-3"><i class="bi bi-exclamation-triangle me-2"></i>Error: ' + err.message + '</div>';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-play-fill me-1"></i>Retry';
+            });
+    }
+</script>
+{% endblock %}
